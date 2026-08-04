@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  ECR_REPO: networqg/spring
+  ECR_REPO: neworqg/spring
   APP_DIR: /home/ec2-user/spring
 
 jobs:
