@@ -5,6 +5,8 @@ on:
     branches:
       - main
 
+#Env
+
 env:
   ECR_REPO: neworqg/spring
   APP_DIR: /home/ec2-user/spring
