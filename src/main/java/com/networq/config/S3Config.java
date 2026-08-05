@@ -1,6 +1,7 @@
 package com.networq.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +13,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class S3Config {
 
     @Value("${aws.access-key}")
@@ -26,14 +28,15 @@ public class S3Config {
     @Bean
     public S3Client s3Client() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-        System.out.println("AWS Region: " + region);
+        log.info("Initializing S3 client for AWS region {}", region);
         return S3Client.builder().region(Region.of(region)).credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
 
     }
     @Bean
     public S3Presigner s3Presigner() {
         AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKey, secretKey);
-      return S3Presigner.builder().region(Region.of(region)).credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
+        log.info("Initializing S3 presigner for AWS region {}", region);
+        return S3Presigner.builder().region(Region.of(region)).credentialsProvider(StaticCredentialsProvider.create(credentials)).build();
     }
 
 }

@@ -1,10 +1,12 @@
 package com.networq.security;
 
 import com.networq.service.AdminService;
+import com.networq.logging.LoggingUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -20,6 +22,7 @@ import java.time.Instant;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler {
         private final AdminService adminService;
         private final OAuth2AuthorizedClientService auth2AuthorizedClientService;
@@ -33,6 +36,8 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                                                 token.getAuthorizedClientRegistrationId(),
                                                 token.getName());
                 if (authorizedClient == null) {
+                        log.warn("Google OAuth authorized client was not found. registrationId={}",
+                                        token.getAuthorizedClientRegistrationId());
                         response.sendError(
                                         HttpServletResponse.SC_UNAUTHORIZED,
                                         "Google authorization not found.");
@@ -55,6 +60,7 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
                 String idToken = user.getIdToken().getTokenValue();
 
+                log.info("Google OAuth authentication succeeded. email={}", email);
                 try {
                         adminService.authenticate(
                                         googleSub,
@@ -66,11 +72,15 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                                         idToken,
                                         accessTokenExpiresAt);
                 } catch (AccessDeniedException ex) {
+                        log.warn("Google OAuth authenticated user is not authorized. email={}, message={}",
+                                        email,
+                                        LoggingUtils.safe(ex.getMessage()));
                         response.sendError(
                                         HttpServletResponse.SC_FORBIDDEN,
                                         ex.getMessage());
                         return;
                 }
+                log.info("Google OAuth flow completed. email={}", email);
                 response.sendRedirect("http://localhost:5050");
         }
 }

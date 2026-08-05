@@ -4,6 +4,7 @@ import com.networq.entity.Admin;
 import com.networq.repo.AdminRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import java.time.Instant;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class AdminService {
 
         private final AdminRepository adminRepository;
@@ -26,6 +28,7 @@ public class AdminService {
                         String idToken,
                         Instant accessTokenExpiresAt) {
 
+                log.info("Authenticating admin via Google OAuth. email={}", email);
                 if (adminRepository.count() == 0) {
                         return bootstrap(
                                         googleSub,
@@ -59,6 +62,7 @@ public class AdminService {
                         String idToken,
                         Instant accessTokenExpiresAt) {
 
+                log.info("Logging in admin. email={}", email);
                 Admin admin = adminRepository.findByGoogleSub(googleSub)
                                 .orElseThrow(() -> new AccessDeniedException(
                                                 "You are not authorized to access this application."));
@@ -76,7 +80,9 @@ public class AdminService {
                 admin.setIdToken(idToken);
                 admin.setAccessTokenExpiresAt(accessTokenExpiresAt);
 
-                return adminRepository.save(admin);
+                Admin savedAdmin = adminRepository.save(admin);
+                log.info("Admin login completed. adminId={}, email={}", savedAdmin.getId(), savedAdmin.getEmail());
+                return savedAdmin;
         }
 
         private Admin bootstrap(
@@ -89,6 +95,7 @@ public class AdminService {
                         String idToken,
                         Instant accessTokenExpiresAt) {
 
+                log.info("Bootstrapping first admin. email={}", email);
                 if (adminRepository.count() > 0) {
                         throw new AccessDeniedException("Admin already exists.");
                 }
@@ -105,13 +112,17 @@ public class AdminService {
                                 .active(true)
                                 .build();
 
-                return adminRepository.save(admin);
+                Admin savedAdmin = adminRepository.save(admin);
+                log.info("First admin bootstrapped successfully. adminId={}, email={}", savedAdmin.getId(), savedAdmin.getEmail());
+                return savedAdmin;
         }
 
         public Admin getAuthenticatedAdmin(String googleSub) {
 
-                return adminRepository.findByGoogleSub(googleSub)
+                Admin admin = adminRepository.findByGoogleSub(googleSub)
                                 .orElseThrow(() -> new AccessDeniedException("Admin not found."));
+                log.info("Authenticated admin loaded. adminId={}, email={}", admin.getId(), admin.getEmail());
+                return admin;
         }
 
 }

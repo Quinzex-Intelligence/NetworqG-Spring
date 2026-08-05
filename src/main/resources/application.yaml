@@ -21,8 +21,8 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        format_sql: true
-    show-sql: true
+        format_sql: false
+    show-sql: false
   security:
     oauth2:
       client:
@@ -44,6 +44,17 @@ spring:
 server:
   port: 8080
 
+info:
+  app:
+    version: ${APP_VERSION:0.0.1-SNAPSHOT}
+
+logging:
+  level:
+    com.networq: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    org.hibernate.orm.connections.pooling: WARN
+
 company:
   email: hicarrerott@gmail.com
 
@@ -54,3 +65,19 @@ aws:
 
   s3:
     bucket-name:  networkq-test-01
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

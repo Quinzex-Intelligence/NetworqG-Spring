@@ -1,6 +1,8 @@
 package com.networq.service;
 
+import com.networq.logging.LoggingUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class S3Service {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
@@ -35,20 +38,51 @@ public class S3Service {
         validateImage(file);
 
         String extension = getExtension(file.getOriginalFilename());
-
         String key = "services/" + UUID.randomUUID().toString() + "." + extension;
+        long fileSize = file.getSize();
 
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucketName).key(key)
-                .contentType(file.getContentType()).build();
-        s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
-        return key;
+        log.info("S3 upload started. objectKey={}, fileSize={} bytes", key, fileSize);
+
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder().bucket(bucketName).key(key)
+                    .contentType(file.getContentType()).build();
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+            log.info("S3 upload completed. objectKey={}, fileSize={} bytes", key, fileSize);
+            return key;
+        } catch (IOException | RuntimeException ex) {
+            log.error("""
+                    S3 upload failed.
+                    objectKey  : {}
+                    fileSize   : {} bytes
+                    Stacktrace :
+                    {}
+                    """,
+                    key,
+                    fileSize,
+                    LoggingUtils.stackTrace(ex));
+            throw ex;
+        }
 
     }
 
     public void deleteImage(String imageKey) {
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucketName).key(imageKey)
-                .build();
-        s3Client.deleteObject(deleteObjectRequest);
+        log.info("Deleting image from S3. objectKey={}", imageKey);
+        try {
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder().bucket(bucketName).key(imageKey)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("Deleted image from S3. objectKey={}", imageKey);
+        } catch (RuntimeException ex) {
+            log.error("""
+                    Failed to delete image from S3.
+                    objectKey  : {}
+                    Stacktrace :
+                    {}
+                    """,
+                    imageKey,
+                    LoggingUtils.stackTrace(ex));
+            throw ex;
+        }
     }
 
     private void validateImage(MultipartFile file) {
@@ -68,10 +102,25 @@ public class S3Service {
     }
 
     public String generatePresignedUrl(String imageKey) {
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder().bucket(bucketName).key(imageKey).build();
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .signatureDuration(Duration.ofMinutes(30)).getObjectRequest(getObjectRequest).build();
-        return s3Presigner.presignGetObject(presignRequest).url().toString();
+        log.info("Generating pre-signed URL. objectKey={}", imageKey);
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder().bucket(bucketName).key(imageKey).build();
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofMinutes(30)).getObjectRequest(getObjectRequest).build();
+            String presignedUrl = s3Presigner.presignGetObject(presignRequest).url().toString();
+            log.info("Generated pre-signed URL. objectKey={}", imageKey);
+            return presignedUrl;
+        } catch (RuntimeException ex) {
+            log.error("""
+                    Failed to generate pre-signed URL.
+                    objectKey  : {}
+                    Stacktrace :
+                    {}
+                    """,
+                    imageKey,
+                    LoggingUtils.stackTrace(ex));
+            throw ex;
+        }
     }
 
     private String getExtension(String fileName) {

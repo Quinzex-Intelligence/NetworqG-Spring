@@ -4,6 +4,7 @@ import com.networq.entity.Jobs;
 import com.networq.repo.JobRepo;
 import com.networq.service.EmailService;
 import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,15 +36,15 @@ public class JobApplicationController {
 
         // Check if job exists
         Jobs job = jobRepo.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found."));
+                .orElseThrow(() -> new EntityNotFoundException("Job not found."));
 
         // Validate resume
         if (resume.isEmpty()) {
-            return ResponseEntity.badRequest().body("Resume is required.");
+            throw new IllegalArgumentException("Resume is required.");
         }
 
         if (resume.getSize() > 5 * 1024 * 1024) {
-            return ResponseEntity.badRequest().body("Resume size must not exceed 5 MB.");
+            throw new IllegalArgumentException("Resume size must not exceed 5 MB.");
         }
 
         String contentType = resume.getContentType();
@@ -53,8 +54,7 @@ public class JobApplicationController {
                         || contentType.equals("application/msword")
                         || contentType.equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))) {
 
-            return ResponseEntity.badRequest()
-                    .body("Only PDF, DOC and DOCX files are allowed.");
+            throw new IllegalArgumentException("Only PDF, DOC and DOCX files are allowed.");
         }
 
         // Send email
