@@ -81,6 +81,6 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                         return;
                 }
                 log.info("Google OAuth flow completed. email={}", email);
-                response.sendRedirect("http://localhost:5050");
+                response.sendRedirect("https://networqglobal.com");
         }
 }
