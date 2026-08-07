@@ -41,7 +41,7 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                         response.sendError(
                                         HttpServletResponse.SC_UNAUTHORIZED,
                                         "Google authorization not found.");
-                        response.sendRedirect("https://networqglobal.com/?error=403");
+
                         return;
                 }
                 OidcUser user = (OidcUser) authentication.getPrincipal();
@@ -76,9 +76,7 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                         log.warn("Google OAuth authenticated user is not authorized. email={}, message={}",
                                         email,
                                         LoggingUtils.safe(ex.getMessage()));
-                        response.sendError(
-                                        HttpServletResponse.SC_FORBIDDEN,
-                                        ex.getMessage());
+                        response.sendRedirect("https://networqglobal.com/?error=403");
                         return;
                 }
                 log.info("Google OAuth flow completed. email={}", email);
