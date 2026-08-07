@@ -41,6 +41,7 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                         response.sendError(
                                         HttpServletResponse.SC_UNAUTHORIZED,
                                         "Google authorization not found.");
+                        response.sendRedirect("https://networqglobal.com/?error=403");
                         return;
                 }
                 OidcUser user = (OidcUser) authentication.getPrincipal();
