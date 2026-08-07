@@ -33,6 +33,11 @@ public class AuthController {
         response.sendRedirect("/oauth2/authorization/google");
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return new ResponseEntity<>("welcome",HttpStatus.OK);
+    }
+
 
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> me(Authentication authentication) {
