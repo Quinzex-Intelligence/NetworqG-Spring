@@ -19,7 +19,9 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         config.setAllowedOrigins(List.of(
-                "http://localhost:5050"
+                "http://localhost:5050",
+                "https://networqglobal.com",
+                "http://localhost:5173"
         ));
 
         config.setAllowedMethods(List.of(
