@@ -43,8 +43,7 @@ public class AuthController {
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        Admin admin = adminService.getAuthenticatedAdmin(user.getSubject());
+        Admin admin = adminService.getAuthenticatedAdmin(user.getEmail());
 
         return ResponseEntity.ok(
                 AuthResponse.builder()

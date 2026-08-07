@@ -62,10 +62,12 @@ public class AdminService {
                         String idToken,
                         Instant accessTokenExpiresAt) {
 
-                log.info("Logging in admin. email={}", email);
-                Admin admin = adminRepository.findByGoogleSub(googleSub)
-                                .orElseThrow(() -> new AccessDeniedException(
-                                                "You are not authorized to access this application."));
+        log.info("Logging in admin. email={}", email);
+        Admin admin = adminRepository.findByEmail(email)
+                        .orElseThrow(() -> new AccessDeniedException(
+                                        "You are not authorized to access this application."));
+
+        admin.setGoogleSub(googleSub);
 
                 admin.setEmail(email);
                 admin.setName(name);
@@ -117,9 +119,9 @@ public class AdminService {
                 return savedAdmin;
         }
 
-        public Admin getAuthenticatedAdmin(String googleSub) {
+        public Admin getAuthenticatedAdmin(String email) {
 
-                Admin admin = adminRepository.findByGoogleSub(googleSub)
+                Admin admin = adminRepository.findByEmail(email)
                                 .orElseThrow(() -> new AccessDeniedException("Admin not found."));
                 log.info("Authenticated admin loaded. adminId={}, email={}", admin.getId(), admin.getEmail());
                 return admin;
