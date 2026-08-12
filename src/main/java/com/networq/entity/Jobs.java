@@ -19,7 +19,7 @@ public class Jobs {
 
 
     private String jobId;
-
+    @Column(columnDefinition = "TEXT")
     private String jobDescription;
 
     private Instant createdDate;
