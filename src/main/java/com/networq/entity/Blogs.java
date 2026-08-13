@@ -8,6 +8,7 @@ import java.time.Instant;
 
 @Table(name = "blogs")
 @Data
+@Entity
 public class Blogs {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

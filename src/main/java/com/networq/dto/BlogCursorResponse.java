@@ -9,8 +9,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class BlogCursorResponse {
-
-    private List<Blogs> blogs;
+    private List<BlogResponse> blogs;
     private String nextCursor;
     private boolean hasMore;
 }

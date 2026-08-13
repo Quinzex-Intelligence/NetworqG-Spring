@@ -2,6 +2,7 @@ package com.networq.service;
 
 
 import com.networq.dto.BlogCursorResponse;
+import com.networq.dto.BlogResponse;
 import com.networq.dto.CreateBlogRequest;
 import com.networq.dto.UpdateBlogRequest;
 import com.networq.entity.Blogs;
@@ -86,7 +87,6 @@ public class BlogService {
                 cursorId
         );
     }
-
     private BlogCursorResponse getBlogs(
             boolean active,
             int limit,
@@ -99,17 +99,32 @@ public class BlogService {
             );
         }
 
-        List<Blogs> blogs = active
-                ? blogRepository.findActiveBlogs(
-                cursorCreatedAt,
-                cursorId,
-                PageRequest.of(0, limit + 1)
-        )
-                : blogRepository.findInactiveBlogs(
-                cursorCreatedAt,
-                cursorId,
-                PageRequest.of(0, limit + 1)
-        );
+        PageRequest pageRequest = PageRequest.of(0, limit + 1);
+
+        List<Blogs> blogs;
+
+        if (cursorCreatedAt == null
+                || cursorId == null
+                || cursorId.isBlank()) {
+
+            blogs = active
+                    ? blogRepository.findActiveBlogs(pageRequest)
+                    : blogRepository.findInactiveBlogs(pageRequest);
+
+        } else {
+
+            blogs = active
+                    ? blogRepository.findActiveBlogsAfterCursor(
+                    cursorCreatedAt,
+                    cursorId,
+                    pageRequest
+            )
+                    : blogRepository.findInactiveBlogsAfterCursor(
+                    cursorCreatedAt,
+                    cursorId,
+                    pageRequest
+            );
+        }
 
         boolean hasMore = blogs.size() > limit;
 
@@ -123,13 +138,32 @@ public class BlogService {
             Blogs lastBlog = blogs.get(blogs.size() - 1);
 
             nextCursor = lastBlog.getCreatedAt()
-                    .toString() + "|" + lastBlog.getId();
+                    + "|" + lastBlog.getId();
         }
 
+        List<BlogResponse> responses = blogs.stream()
+                .map(this::mapToResponse)
+                .toList();
+
         return new BlogCursorResponse(
-                blogs,
+                responses,
                 nextCursor,
                 hasMore
         );
+    }
+    private BlogResponse mapToResponse(Blogs blog) {
+
+        String imageUrl = s3Service.generatePresignedUrl(
+                blog.getImageKey()
+        );
+
+        return BlogResponse.builder()
+                .id(blog.getId())
+                .title(blog.getTitle())
+                .description(blog.getDescription())
+                .active(blog.isActive())
+                .createdAt(blog.getCreatedAt())
+                .imageUrl(imageUrl)
+                .build();
     }
 }
