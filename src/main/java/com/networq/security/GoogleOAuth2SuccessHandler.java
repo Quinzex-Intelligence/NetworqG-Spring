@@ -76,10 +76,10 @@ public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                         log.warn("Google OAuth authenticated user is not authorized. email={}, message={}",
                                         email,
                                         LoggingUtils.safe(ex.getMessage()));
-                        response.sendRedirect("https://networqglobal.com/?error=403");
+                        response.sendRedirect("https://quinzex.networqglobal.com/?error=403");
                         return;
                 }
                 log.info("Google OAuth flow completed. email={}", email);
-                response.sendRedirect("https://networqglobal.com");
+                response.sendRedirect("https://quinzex.networqglobal.com");
         }
 }
